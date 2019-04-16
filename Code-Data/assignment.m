@@ -2,7 +2,7 @@
 %
 % Authors: 
 % - Minh Nhat Tuong - Nguyen, n9776001
-% - 
+% - Huy - Nguyen, n9999999
 % 
 %
 %% 1. Features, Classes, and Linear Regression
@@ -10,7 +10,7 @@
 clc
 clear
 close all
-
+%%
 disp('1. Features, Classes, and Linear Regression');
 
 % (a) Plot the training data in a scatter plot.
@@ -31,58 +31,90 @@ xlabel('x');
 ylabel('y');
 title('Plotting all training data points');
 legend('Training data');
-
+%%
 % (b) Create a linear regression learner using the above functions. 
 % Plot it on the same plot as the training data.
 
-linXtr = polyx(xtr, 1);
-linLearner = linearReg(linXtr, ytr);
-xline = [0:.01:2]'; % Transpose
-yline = predict(linLearner, polyx(xline, 1));
+linXtr = polyx(Xtr, 1);
+learner_linear = linearReg(linXtr, Ytr);
+xline = [0:.01:1]'; % Transpose
+yline = predict(learner_linear, polyx(xline, 1));
+
+figure('name', 'Linear regression predictor');
 plot(xline, yline);
-legend('Training data', 'Linear predictor');
+hold on % Plot training data and label figure.
+plot (Xtr, Ytr, 'bo');
+legend('Linear Predictor','Training data');
 xlabel('x');
 ylabel('y');
+title('Linear regression predictor');
 
+%% 
+% Alternative quadratic predictor.
+quadXtr = polyx(Xtr, 2);
+learner_quadratic = linearReg(quadXtr, Ytr); % Create and learn a regression predictor from the data Xtr, ytr.
+xline = [0:.01:1]' ; % Transpose
+yline = predict(learner_quadratic, polyx(xline, 2)); % Assuming quadratic features
+figure('name', 'Quadratic linear predictor');
+plot(xline, yline);
+hold on % Plot training data and label figure.
+plot (Xtr, Ytr, 'bo');
+legend('Linear Predictor', 'Training Data');
+title('Quadratic linear predictor');
+
+%%
 % (c) Create plots with the data and a higher-order polynomial (3, 5, 7, 9, 11, 13).
-Xtr = polyx(xtr, 5);
-learner_quintic = linearReg (Xtr , ytr);
+
+quinXtr = polyx(Xtr, 5);
+learner_quintic = linearReg (quinXtr , Ytr);
 yline = predict (learner_quintic , polyx(xline ,5)); % assuming quintic features
 figure('name', 'Quintic linear predictor');
-plot ( xline , yline ,'ro ');
+plot ( xline , yline );
 hold on
-plot (xtr, ytr, 'bo');
+plot (Xtr, Ytr, 'bo');
 legend('Linear Predictor', 'Training Data');
 title('Quintic linear predictor');
 
+%%
 % (d) Calculate the mean squared error associated with each of your learned 
 %     models on the training data.
-% Quadratic
-Xtr = polyx(xtr, 2);
-yhat = predict(learner_quadratic, Xtr);
-mseQuadTrain = immse(yhat, ytr);
-fprintf('The MSE for the quadratic linear predictor on training data was: %.2f\n', mseQuadTrain);
-% Quintic
-Xtr = polyx(xtr, 5);
-yhat = predict(learner_quintic, Xtr);
-mseQinTrain = immse(yhat, ytr);
-fprintf('The MSE for the quintic linear predictor on training data was: %.2f\n', mseQinTrain);
+% Linear
+yhat = predict(learner_linear, linXtr);
+mseLinTrain = immse(yhat, Ytr);
+fprintf('The MSE for the linear predictor on training data was: %.4f\n', mseLinTrain);
 
+% Quadratic
+yhat = predict(learner_quadratic, quadXtr);
+mseQuadTrain = immse(yhat, Ytr);
+fprintf('The MSE for the quadratic linear predictor on training data was: %.4f\n', mseQuadTrain);
+
+% Quintic
+yhat = predict(learner_quintic, quinXtr);
+mseQinTrain = immse(yhat, Ytr);
+fprintf('The MSE for the quintic linear predictor on training data was: %.4f\n', mseQinTrain);
+
+%%
 % (e,f,g) Calculate the MSE for each model on the test data (in mTestData.txt).
 % Compare the obtained MAE values with the MSE values obtained above.
 
-mTest = load('data/mcycleTest.txt');
-ytest = mTest(: ,1); xtest = mTest(: ,2);
+mTest = load('data/mTestData.txt');
+xtest = mTest(: ,1); ytest = mTest(: ,2);
+% Linear
+Xtest = polyx(xtest, 1);
+yhat = predict(learner_linear, Xtest);
+mseLinTest = immse(yhat, ytest);
+fprintf('The MSE for the linear predictor on test data was: %.4f\n', mseLinTest);
 % Quadratic
 Xtest = polyx(xtest, 2);
 yhat = predict(learner_quadratic, Xtest);
 mseQuadTest = immse(yhat, ytest);
-fprintf('The MSE for the quadratic linear predictor on test data was: %.2f\n', mseQuadTest);
+fprintf('The MSE for the quadratic linear predictor on test data was: %.4f\n', mseQuadTest);
 % Quintic
 Xtest = polyx(xtest, 5);
 yhat = predict(learner_quintic, Xtest);
 mseQuinTest = immse(yhat, ytest);
-fprintf('The MSE for the quintic linear predictor on test data was: %.2f\n', mseQuinTest);
+fprintf('The MSE for the quintic linear predictor on test data was: %.4f\n', mseQuinTest);
+
 
 
 %% 2. kNN Regression
