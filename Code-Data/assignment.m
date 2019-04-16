@@ -119,57 +119,101 @@ fprintf('The MSE for the quintic linear predictor on test data was: %.4f\n', mse
 
 %% 2. kNN Regression
 
-% Create a list of K values
+%%
+% (a) Using the knnRegress class, implement (add code to) the predict
+% function to make it functional.
 
-% Plot training data
+%%
+% (b) Using the same technique as in Problem 1a, plot the predicted
+% function for several values of $k: 1, 2, 3, 5, 10, 50$. How does the
+% choice of $k$ relate to the “complexity” of the regression function?
 
-% Create and learn a kNN regression predictor from the data Xtr, ytr for each K.
-
+%%
+% (c) What kind of functions can be output by a nearest neighbor regression
+% function? Briefly justify your conclusion.
 
 %% 3. Hold-out and Cross-validation
 
-% Create a copy of the data with only the first 20 points
+%%
+% *(a) Similarly to Problem 1 and 2, compute the MSE of the test data on a
+% model trained on only the first 20 training data examples for
+% $k = 1, 2, 3, . . . , 100$. Plot the MSE versus $k$ on a log-log scale
+% (see help loglog).*
 
-% Pre-allocate a matrix for all of the plotted values
+%%
+% *(b) Repeat, but use all the training data. What happened? Contrast with
+% your results from problem 1 (hint: which direction is “complexity” in this picture?).*
+%
 
-% Plot training data
-
+%%
+% *(c) Using only the training data, estimate the curve using 4-fold
+% cross-validation. Split the training data into two parts, indices 1:20
+% and 21:80; use the larger of the two as training data and the smaller as
+% testing data, then repeat three more times with different sets of 20 and
+% average the MSE. Add this curve to your plot. Why might we need to use
+% this technique?*
+%
 %% 4. Nearest Neighbor Classifiers
 
-% (A) - Plot dataset by feature values.
 
-% (B) Learn and plot 1-nearest-neighbour predictor
-
-% (C) Repeat for several values of k
-
-% (D) Split data into training (80%) and valuation (20%) data. Train and 
-%     validate model for multiple values of k and calculate its
-%     performance.
-
-%% 5. Perceptrons and Logistic Regression
-
-% (A) Show the two classes in a scatter plot and verify that one is 
-% linearly separable while the other is not.
-
-%% (B) Write the function @logisticClassify2/plot2DLinear.m such that it 
-%      can Plot the two classes of data in different colors, along with the 
-%      decision boundary (a line). To demo your function plot the decision 
-%       boundary corresponding to the classifier sign( .5 + 1x1 ? .25x2 )
-%       along with the A data, and again with the B data.
+%%
+% *(a) Plot the data by their feature values, using the class value to
+% select the color.*
 
 
-%% (C) Complete the predict.m function to make predictions for your linear 
-%      classifier.  Verify that your function works by computing & 
-%      reporting the error rate of the classifier in the previous
-%      part on both data sets A and B. (The error rate on data set A should
-%      be ? 0.0505.)
+%%
+% *(b) Use the provided knnClassify class to learn a 1-nearest-neighbor
+% predictor.*
+
+%%
+% *(c) Do the same thing for several values of k (say, [1, 3, 10, 30]) and
+% comment on their appearance.*
 
 
-%% (D) Refer to report.
+
+%%
+% *(d) Now split the data into an 80/20 training/validation split. For
+% $k = [1, 2, 5, 10, 50, 100, 200]$, learn a model on the 80% and calculate
+% its performance (# of data classified incorrectly) on the validation
+% data. What value of k appears to generalize best given your training
+% data? Comment on the performance at the two endpoints, in terms of over-
+% or under-fitting.*
+%
 
 
-%% (E) Implemented train.m
+%% 5. Perceptron and Logistic Regression
+
+%%
+% *(a) Show the two classes in a scatter plot and verify that one is
+% linearly separable while the other is not
+
+%%
+% *(b) Write (fill in) the function @logisticClassify2/plot2DLinear.m so that
+% it plots the two classes of data in dierent colors, along with the
+% decision boundary (a line). Include the listing of your code in your
+% report. To demo your function plot the decision boundary corresponding
+% to the classifier $$ sign(.5 + 1x_1 - .25x_2) $$*
+
+%%
+% *(c) Complete the predict.m function to make predictions for your linear classifier.*
+
+%%
+% *(d)*
 
 
-%% (F) 
+%%
+% *(e) Complete your train.m function to perform stochastic gradient descent
+% on the logistic loss function.* 
 
+
+%%
+% *(f) Run your logistic regression classifier on both data sets (A and B);
+% for this problem, use no regularization $(\alpha = 0)$. Describe your parameter
+% choices (stepsize, etc.) and show a plot of both the convergence of the
+% surrogate loss and error rate, and a plot of the final converged
+% classifier with the data (using e.g. plotClassify2D). In your report,
+% please also include the functions that you wrote (at minimum, train.m,
+% but possibly a few small helper functions as well)*
+
+%%
+close all
