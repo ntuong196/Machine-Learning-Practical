@@ -137,22 +137,106 @@ fprintf('The MSE for the quintic linear predictor on test data was: %.4f\n', mse
 %%
 % *(a) Similarly to Problem 1 and 2, compute the MSE of the test data on a
 % model trained on only the first 20 training data examples for
-% $k = 1, 2, 3, . . . , 100$. Plot the MSE versus $k$ on a log-log scale
+% $k = 1, 2, 3, . . . , 140$. Plot the MSE versus $k$ on a log-log scale
 % (see help loglog).*
+
+%Clean up
+clc
+clear
+close all
+
+%Import data
+mTrain = load('data/mTrainData.txt');
+mTest = load('data/mTestData.txt');
+xtest = mTest(: ,1); % Features
+ytest = mTest(: ,2); % Values
+
+% first 20 training data examples
+xtr = mTrain(1:20,1);
+ytr = mTrain(1:20,2); 
+ 
+% initalise a vector for MSE of each k value
+MSE1 = zeros(140, 1); 
+
+for k=1:140 % iterate on each k value
+    learner = knnRegress(k, xtr, ytr); % create the learner using k
+    yhat = predict(learner, xtest); % predict and find MSE relative to test data
+    MSE1(k) = mean((yhat - ytest).^2);
+end 
+figure;
+loglog(1:140, MSE1, 'r'); % plot on a loglog graph
+xlabel('K value');
+ylabel('MSE');
+title('MSE on different K values');
+legend('Only using first 20 training data examples');
 
 %%
 % *(b) Repeat, but use all the training data. What happened? Contrast with
-% your results from problem 1 (hint: which direction is “complexity” in this picture?).*
+% your results from problem 1 (hint: which direction is complexity in this picture?).*
+%
+
+% all training data examples
+xtr = mTrain(:,1);
+ytr = mTrain(:,2); 
+
+% initalise a vector for MSE of each k value
+MSE2 = zeros(140, 1); 
+
+for k=1:140 % iterate on each k value
+    learner = knnRegress(k, xtr, ytr); % create the learner using k
+    yhat = predict(learner, xtest); % predict and find MSE relative to test data
+    MSE2(k) = mean((yhat - ytest).^2);
+end 
+
+figure;
+loglog(1:140, MSE1, 'r'); % plot on a loglog graph
+xlabel('K value');
+ylabel('MSE');
+title('MSE on different K values');
+hold on;
+loglog(1:140, MSE2, 'b'); % plot on the loglog graph
+legend('Only using first 20 training data examples', ...
+    'All training data examples');
+%
+% _When using all training data, the MSE was able to be reduced much
+% further.Contrast to problem 1, here we are increasing the complexity  of
+% the sample (or training data) to reduce cost. Whereas in problem one we
+% increased the model complexity by raising to 5th degree polynomial._
 %
 
 %%
 % *(c) Using only the training data, estimate the curve using 4-fold
 % cross-validation. Split the training data into two parts, indices 1:20
-% and 21:80; use the larger of the two as training data and the smaller as
+% and 21:140; use the larger of the two as training data and the smaller as
 % testing data, then repeat three more times with different sets of 20 and
 % average the MSE. Add this curve to your plot. Why might we need to use
 % this technique?*
 %
+MSE3 = zeros(140, 1); % initalise a vector for MSE of each k value
+for k=1:140 % test for 100 values of k
+    MSEtemp = zeros(4, 1); % temp mse array for each i (averaged for each k)
+    for i=1:4
+        m = i*20; n = m-19; % local bounds
+        iTest = mTrain(n:m,:); % 20 indicies for testing
+        iTrain = setdiff(mTrain, iTest, 'rows'); % rest for training
+        learner = knnRegress(k, iTrain(:,2), iTrain(:,1)); % train the learner
+        yhat = predict(learner, iTest(:,2)); % predict at testing x values
+        MSEtemp(i) = mean((yhat - iTest(:,1)).^2); 
+    end
+    MSE3(k) = mean(MSEtemp); % average the MSE 
+end
+loglog(1:140, MSE3, 'm'); % plot on the loglog graph
+legend('Only using first 20 training data examples', ...
+    'All training data examples', ...
+    'All training data examples with 4-fold Cross-validation');
+%
+% _Using this technique may produce more accurate error values. This is
+% because the effective 'testing data' changes multiple times per
+% iteration, making it a better representation of the model. Also, in this
+% case more data samples are used for testing because mTest only has 60
+% samples relative to the 120 in mTrain.
+%
+
 %% 4. Nearest Neighbor Classifiers
 
 

@@ -11,8 +11,13 @@
         [tmp,idx] = sort(dist);              % find nearest neighbors over Xtrain (dimension 2)
                                             % idx(1) is the index of the nearest point, etc.; see help sort
 
-        error('You should write prediction code here');
-        Yte(i)=something_you_write();       % predict ith test example's value from nearest neighbors
-
+%         error('You should write prediction code here');
+%         Yte(i)=something_you_write();       % predict ith test example's value from nearest neighbors
+        % Our code here
+        kclosest_vals = [];
+        for j=1:K
+            kclosest_vals = [kclosest_vals, obj.Ytrain(idx(j))];
+        end
+        Yte(i) = sum(kclosest_vals)/K;
       end;
     end

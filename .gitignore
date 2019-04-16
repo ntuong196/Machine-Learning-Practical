@@ -3,6 +3,7 @@
 
 # OSX / *nix default autosave extension
 *.m~
+*.DS_Store
 
 # Compiled MEX binaries (all platforms)
 *.mex*
@@ -26,4 +27,8 @@ codegen/
 
 # Octave session info
 octave-workspace
+
+#Developer choice
 Report
+texreport.m
+texreport.mlx
