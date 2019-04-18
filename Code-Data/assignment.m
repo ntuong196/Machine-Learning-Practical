@@ -145,7 +145,8 @@ end
 % (c) What kind of functions can be output by a nearest neighbor regression
 % function? Briefly justify your conclusion.
 
-% Based on the plot of 2b, it can be observed that the output of a nearest neighbor regression function is a linear function 
+% Based on the plot of 2b, it can be observed that the output of a nearest 
+% neighbor regression function is a linear function 
 
 %% 3. Hold-out and Cross-validation
 
@@ -303,6 +304,11 @@ end
 
 
 %% 5. Perceptron and Logistic Regression
+
+% Clean up*
+clear;
+clc;
+close all;
 % Load the Iris dataset 
 iris = load('data/iris.txt'); 
 X = iris(:,1:2); Y = iris(:, end); 
@@ -319,20 +325,29 @@ figure();
 %Plot the dataset A having class 0 and 1 
 subplot(1,2,1); 
 posA = find(YA == 1); negA = find(YA == 0); 
+
 plot(XA(posA,1), XA(posA,2), 'k+','LineWidth', 2,'MarkerSize',7); 
 hold on 
 plot(XA(negA,1), XA(negA,2),'ko', 'MarkerFaceColor', 'y', 'MarkerSize',7); 
 hold off 
 legend('Class = 1', 'Class = 0'); 
+title('Class 0 vs Class 1 (Separable)');
+xlabel('Sepal Length');
+ylabel('Sepal Width');
 
 %Plot the dataset B having class 1 and 2 
 subplot(1,2,2); 
 posB = find(YB == 2); negB = find(YB == 1); 
+xlabel('Sepal Length');
+ylabel('Sepal Width');
 plot(XB(posB,1), XB(posB,2), 'k+','LineWidth', 2,'MarkerSize',7); 
 hold on 
 plot(XB(negB,1), XB(negB,2),'ko', 'MarkerFaceColor', 'y', 'MarkerSize',7); 
 hold off 
 legend('Class = 2', 'Class = 1'); 
+title('Class 1 vs Class 2 (Non-Separable)');
+xlabel('Sepal Length');
+ylabel('Sepal Width');
 
 %%
 % *(b) Write (fill in) the function @logisticClassify2/plot2DLinear.m so that
