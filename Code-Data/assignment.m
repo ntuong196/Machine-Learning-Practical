@@ -2,7 +2,7 @@
 %
 % Authors: 
 % - Minh Nhat Tuong - Nguyen, n9776001
-% - Huy - Nguyen, n9999999
+% - Quang Huy Tran, n10069275
 % 
 %
 %% 1. Features, Classes, and Linear Regression
@@ -128,9 +128,24 @@ fprintf('The MSE for the quintic linear predictor on test data was: %.4f\n', mse
 % function for several values of $k: 1, 2, 3, 5, 10, 50$. How does the
 % choice of $k$ relate to the “complexity” of the regression function?
 
+kV = [1,2,3,5,10,50];  % K values of Problem 2 
+xline = [0:.01:1]'; % transpose 
+figure('Name','Plot the KNN Regression Prediction for different polynomials');
+for i = 1:length(kV)
+    learner = knnRegress(kV(i),Xtr,Ytr);
+    yline = predict(learner,xline);
+    subplot(3,2,i); 
+    plot(xline,yline,'b');
+    title(['k = ',num2str(kV(i))]);
+    xlabel('Features');
+    ylabel('Labels');
+end 
+
 %%
 % (c) What kind of functions can be output by a nearest neighbor regression
 % function? Briefly justify your conclusion.
+
+% Based on the plot of 2b, it can be observed that the output of a nearest neighbor regression function is a linear function 
 
 %% 3. Hold-out and Cross-validation
 
@@ -212,6 +227,7 @@ legend('Only using first 20 training data examples', ...
 % average the MSE. Add this curve to your plot. Why might we need to use
 % this technique?*
 %
+hold on 
 MSE3 = zeros(140, 1); % initalise a vector for MSE of each k value
 for k=1:140 % test for 100 values of k
     MSEtemp = zeros(4, 1); % temp mse array for each i (averaged for each k)
@@ -238,21 +254,42 @@ legend('Only using first 20 training data examples', ...
 %
 
 %% 4. Nearest Neighbor Classifiers
-
+% Load Iris Data
+iris = load('data/iris.txt');
+pi = randperm( size (iris ,1));
+Y_iris = iris(pi ,5); X_iris = iris(pi ,1:2);
 
 %%
 % *(a) Plot the data by their feature values, using the class value to
 % select the color.*
+classes_iris = unique(Y_iris); % The number of iris classes 
+colorString = ['b','g','r'];
+figure('Name','Plot the data by the feature values');
+for i = 1:length(classes_iris)
+    index_feature = find(Y_iris==classes_iris(i));
+    scatter(X_iris(index_feature,1),X_iris(index_feature,2),'filled',colorString(i));
+
+    hold on 
+end
+legend('Class = 0','Class = 1','Class = 2'); 
 
 
 %%
 % *(b) Use the provided knnClassify class to learn a 1-nearest-neighbor
 % predictor.*
+knn1_classifier = knnClassify(1,X_iris,Y_iris);
+class2DPlot(knn1_classifier,X_iris,Y_iris);
 
 %%
 % *(c) Do the same thing for several values of k (say, [1, 3, 10, 30]) and
 % comment on their appearance.*
+kValues = [1,3,10,30]; % K values of Problem 4
 
+for i = 1:length(kValues)
+    learner = knnClassify(kValues(i),X_iris,Y_iris);
+    class2DPlot(learner,X_iris,Y_iris);
+    title(strcat('k = ', num2str(kValues(i)))); 
+end
 
 
 %%
@@ -266,10 +303,36 @@ legend('Only using first 20 training data examples', ...
 
 
 %% 5. Perceptron and Logistic Regression
+% Load the Iris dataset 
+iris = load('data/iris.txt'); 
+X = iris(:,1:2); Y = iris(:, end); 
+[X Y] = shuffleData(X,Y); 
+X = rescale(X); 
+XA = X(Y < 2, :); YA = Y(Y < 2); % get class 0 and 1
+XB = X(Y > 0, :); YB = Y(Y > 0); 
 
 %%
 % *(a) Show the two classes in a scatter plot and verify that one is
 % linearly separable while the other is not
+figure(); 
+
+%Plot the dataset A having class 0 and 1 
+subplot(1,2,1); 
+posA = find(YA == 1); negA = find(YA == 0); 
+plot(XA(posA,1), XA(posA,2), 'k+','LineWidth', 2,'MarkerSize',7); 
+hold on 
+plot(XA(negA,1), XA(negA,2),'ko', 'MarkerFaceColor', 'y', 'MarkerSize',7); 
+hold off 
+legend('Class = 1', 'Class = 0'); 
+
+%Plot the dataset B having class 1 and 2 
+subplot(1,2,2); 
+posB = find(YB == 2); negB = find(YB == 1); 
+plot(XB(posB,1), XB(posB,2), 'k+','LineWidth', 2,'MarkerSize',7); 
+hold on 
+plot(XB(negB,1), XB(negB,2),'ko', 'MarkerFaceColor', 'y', 'MarkerSize',7); 
+hold off 
+legend('Class = 2', 'Class = 1'); 
 
 %%
 % *(b) Write (fill in) the function @logisticClassify2/plot2DLinear.m so that
@@ -277,9 +340,50 @@ legend('Only using first 20 training data examples', ...
 % decision boundary (a line). Include the listing of your code in your
 % report. To demo your function plot the decision boundary corresponding
 % to the classifier $$ sign(.5 + 1x_1 - .25x_2) $$*
+wts = [0.5 1 -0.25]; % Set weights 
+ 
+%Logistic Classification of Dataset A 
+learner_XA = logisticClassify2(); 
+learner_XA = setClasses(learner_XA, unique(YA)); 
+learner_XA = setWeights(learner_XA, wts);
+plot2DLinear(learner_XA,XA,YA);     %Plot the linear decision boundary line of dataset A 
+title('Linear decision boundary line of dataset A'); 
+legend('Class = 0', 'Class = 1', 'Decision Boundary Line');
+
+%Logistic Classification of Dataset B 
+learner_XB = logisticClassify2(); 
+learner_XB = setClasses(learner_XB, unique(YB)); 
+learner_XB = setWeights(learner_XB, wts);
+plot2DLinear(learner_XB,XB,YB);      %Plot the linear decision boundary line of dataset B
+title('Linear decision boundary line of dataset B'); 
+legend('Class = 1', 'Class = 2', 'Decision Boundary Line');
+
 
 %%
 % *(c) Complete the predict.m function to make predictions for your linear classifier.*
+% Predict the labels of dataset A and computing error 
+YA_pred = predict(learner_XA,XA); 
+learnerA_error = 0; 
+for i = 1:length(YA_pred)
+    if( YA_pred(i) ~= YA(i))
+        learnerA_error  =  learnerA_error + 1; 
+    end 
+end 
+error_rate_A = learnerA_error/length(YA_pred); 
+fprintf("\nThe error rate of dataset A is %.4f\n",error_rate_A);
+
+% Predict the labels of dataset B and computing error 
+YB_pred = predict(learner_XB,XB); 
+learnerB_error = 0; 
+for i = 1:length(YB_pred)
+    if( YB_pred(i) ~= YB(i))
+        learnerB_error  =  learnerB_error + 1; 
+    end 
+end 
+a = err(learner_XB,XB,YB); 
+error_rate_B = learnerB_error/length(YB_pred); 
+fprintf("\nThe error rate of dataset B is %.4f\n",error_rate_B);
+
 
 %%
 % *(d)*
@@ -299,5 +403,14 @@ legend('Only using first 20 training data examples', ...
 % please also include the functions that you wrote (at minimum, train.m,
 % but possibly a few small helper functions as well)*
 
+%Training the dataset A 
+train(learner_XA,XA,YA);
+%Training the dataset B
+train(learner_XA,XB,YB);
+
+%% 
+%Implement the mini batch gradient descent on the logistic function complete in train_in_batches.m 
+
+train_in_batches(learner_XA,XA,YA,11);
 %%
 close all
