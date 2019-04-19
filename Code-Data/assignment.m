@@ -301,6 +301,27 @@ end
 % data? Comment on the performance at the two endpoints, in terms of over-
 % or under-fitting.*
 %
+[Nx,Dx] = size(X_iris); 
+Xtrain = X_iris(1:round(Nx*0.8),:); 
+Ytrain = Y_iris(1:round(Nx*0.8)); 
+Xvalid = X_iris(round(Nx*0.8)+1:end,:); 
+Yvalid = Y_iris((round(Nx*0.8)+1):end); 
+kvalues = [1,2,5,10,50,100,200]; 
+err = zeros(length(kvalues)); 
+for i = 1:length(kvalues)
+    learner = knnClassify(kvalues(i), Xtrain,Ytrain); 
+    Yhat = predict(learner,Xvalid); 
+    err(i) = sum(Yhat~=Yvalid)/length(Yvalid); 
+end 
+figure(); 
+plot(kvalues,err,'r');
+xlabel('k'); ylabel('Error Rate'); 
+title('Plot the performance of different k values of KNN Classification'); 
+
+% After calculating the performance on the error rate of different 
+% nearest neighbor classifier models using 80/20 training/validation split several times, 
+% the values k = 5, 10 and 50 appears to generalize best given the training data. From the plot of error rates versus k values, 
+% the performance at the two endpoints is over-fitting. 
 
 
 %% 5. Perceptron and Logistic Regression
@@ -401,12 +422,11 @@ fprintf("\nThe error rate of dataset B is %.4f\n",error_rate_B);
 
 
 %%
-% *(d)*
+% *(d)* Derive the gradient of the regularized negative log likelihood J for logistic regression 
 
 
-%%
-% *(e) Complete your train.m function to perform stochastic gradient descent
-% on the logistic loss function.* 
+
+
 
 
 %%
@@ -418,14 +438,268 @@ fprintf("\nThe error rate of dataset B is %.4f\n",error_rate_B);
 % please also include the functions that you wrote (at minimum, train.m,
 % but possibly a few small helper functions as well)*
 
-%Training the dataset A 
-train(learner_XA,XA,YA);
+% Parameters
+% -Step size of gradient ('stepsize'): 0.01 
+% -Tolerance of stopping criterion ('stepTol'): 0.01 
+% -Number of iterations ('stopIter'): 100 
+
+% Training the dataset A 
+train(learner_XA,XA,YA,'stepsize',0.01,'stepTol',0.01,'stopIter',100);
+
 %Training the dataset B
-train(learner_XA,XB,YB);
+train(learner_XB,XB,YB,'stepsize',0.01,'stepTol',0.01,'stopIter',100);
+
+% Functions of train.m and logistic.m 
+
+% logistic.m 
+
+% function value = logistic(obj, X)
+% % logistic(obj,X): evaluate the logistic function for weights obj.wts, data X
+% % wts is (1 x d+1), X is (n x d)  : d features, n data points
+% %
+%   [n,d] = size(X);
+%   X = [ones(n,1), X];      % extend features X by the constant feature
+%   f = X * obj.wts' ;       % compute weighted sum of features
+%   value = 1./(1+exp(-f));  % evaluate logistic function of weighted sum
+
+% train.m 
+
+% function obj = train(obj, X, Y, varargin)
+% % obj = train(obj, Xtrain, Ytrain [, option,val, ...])  : train logistic classifier
+% %     Xtrain = [n x d] training data features (constant feature not included)
+% %     Ytrain = [n x 1] training data classes 
+% %     'stepsize', val  => step size for gradient descent [default 1]
+% %     'stopTol',  val  => tolerance for stopping criterion [0.0]
+% %     'stopIter', val  => maximum number of iterations through data before stopping [1000]
+% %     'reg', val       => L2 regularization value [0.0]
+% %     'init', method   => 0: init to all zeros;  1: init to random weights;  
+% % Output:
+% %   obj.wts = [1 x d+1] vector of weights; wts(1) + wts(2)*X(:,1) + wts(3)*X(:,2) + ...
+% 
+% 
+%   [n,d] = size(X);            % d = dimension of data; n = number of training data
+% 
+%   % default options:
+%   plotFlag = true; 
+%   init     = []; 
+%   stopIter = 1000;
+%   stopTol  = 0.1;
+%   reg      = 0.0;
+%   stepsize = 1;
+% 
+%   i=1;                                       % parse through various options
+%   while (i<=length(varargin)),
+%     switch(lower(varargin{i}))
+%     case 'plot',      plotFlag = varargin{i+1}; i=i+1;   % plots on (true/false)
+%     case 'init',      init     = varargin{i+1}; i=i+1;   % init method
+%     case 'stopiter',  stopIter = varargin{i+1}; i=i+1;   % max # of iterations
+%     case 'stoptol',   stopTol  = varargin{i+1}; i=i+1;   % stopping tolerance on surrogate loss
+%     case 'reg',       reg      = varargin{i+1}; i=i+1;   % L2 regularization
+%     case 'stepsize',  stepsize = varargin{i+1}; i=i+1;   % initial stepsize
+%     end;
+%     i=i+1;
+%   end;
+% 
+%   X1    = [ones(n,1), X];     % make a version of training data with the constant feature
+% 
+%   Yin = Y;                              % save original Y in case needed later
+%   obj.classes = unique(Yin);
+%   if (length(obj.classes) ~= 2) error('This logistic classifier requires a binary classification problem.'); end;
+%   Y(Yin==obj.classes(1)) = 0;
+%   Y(Yin==obj.classes(2)) = 1;           % convert to classic binary labels (0/1)
+% 
+%   if (~isempty(init) || isempty(obj.wts))   % initialize weights and check for correct size
+%     obj.wts = randn(1,d+1);
+%   end;
+%   if (any( size(obj.wts) ~= [1 d+1]) ) error('Weights are not sized correctly for these data'); end;
+%   wtsold = 0*obj.wts+inf;
+% 
+% % Training loop (SGD):
+% iter=1; Jsur=zeros(1,stopIter); J01=zeros(1,stopIter); done=0; 
+% fprintf("Traing Starts-----------------------------------\n"); 
+% fprintf("------------------------------------------------\n");
+% while (~done) 
+%   step = stepsize/iter;               % update step-size and evaluate current loss values
+%   Jsur(iter) = mean(-Y' * log(logistic(obj,X)) - (1-Y)' * log(1 - logistic(obj,X)) + reg * obj.wts * obj.wts');   %%% TODO: compute surrogate (neg log likelihood) loss
+%   fprintf("At iteration i = %i, the error = %.2f\n",iter,Jsur(iter));  
+%   fprintf("------------------------------------------------\n");
+%   J01(iter) = err(obj,X,Yin) * 100;
+%   if (plotFlag), switch d,            % Plots to help with visualization
+%     case 1, fig(2); plot1DLinear(obj,X,Yin);  %  for 1D data we can display the data and the function
+%     case 2, fig(2); plot2DLinear(obj,X,Yin);  %  for 2D data, just the data and decision boundary
+%     otherwise, % no plot for higher dimensions... %  higher dimensions visualization is hard
+%   end; end;
+%   % fig(1); semilogx(1:iter, Jsur(1:iter),'b-',1:iter,J01(1:iter),'g-'); drawnow;
+% 
+%   for j=1:n,
+%     % Compute linear responses and activation for data point j
+%     %%% TODO ^^^
+%     y = logistic(obj,X(j,:));  
+%     
+%     % Compute gradient:
+%     %%% TODO ^^^
+%     grad = - X1(j,:) * (Y(j) -y) + 2 * reg * obj.wts;  
+% 
+%     obj.wts = obj.wts - step * grad;      % take a step down the gradient
+%   end;
+%   done = 0; 
+%   %%% TODO: Check for stopping conditions
+%   % Stop training when the change of loss is not bigger than stopTol or running out of iterations 
+%   if((iter >= 2 && abs(Jsur(iter) - Jsur(iter - 1)) < abs(stopTol)) || iter >= stopIter)
+%      done = 1; 
+%      fprintf("Stop training after %i iterations\n",iter); 
+%      fprintf('Training Completed------------------------------\n');
+%      fig(); semilogx(1:iter, Jsur(1:iter),'b-',1:iter,J01(1:iter),'g-'); title("Plot of the convergence of the surrogate loss and error rate"); legend('Loss Function','Error Rate (%)'); 
+%   end 
+%   
+%   wtsold = obj.wts;
+%   iter = iter + 1;  % Increments the iteration 
+%   
+% 
+% end;
+
 
 %% 
-%Implement the mini batch gradient descent on the logistic function complete in train_in_batches.m 
+% *(g) Implement the mini batch gradient descent on the logistic function complete in train_in_batches.m function
 
+% Run the training in batches of both data sets (A and B) 
+
+% Training in batches of data sets A 
 train_in_batches(learner_XA,XA,YA,11);
+
+% Training in batches of data sets B 
+train_in_batches(learner_XB,XB,YB,11); 
+
+% Functions of create_mini_batches.m and train_in_batches.m 
+
+% create_mini_batches.m 
+
+%function mini_batches = create_mini_batches(obj, X,y, batch_size )
+% %UNTITLED3 Summary of this function goes here
+% %   Detailed explanation goes here
+% 
+% data_values = [X,y];
+% [Nx,Nd] = size(data_values);
+% 
+% pi = randperm(Nx);
+% 
+% data_values = data_values(pi,:);%TODO  shuffle your data
+% n_mini_batches = round(Nx/batch_size);%TODO  based on your data and the batch size compute the number of batches
+% mini_batches = zeros(batch_size,3,n_mini_batches);
+% 
+% for i = 1:n_mini_batches
+%    %TODO extract the minibatch values
+%    mini_batches(:,:,i) = data_values(((i-1)*batch_size+1):i*batch_size,:); 
+% end
+% 
+% end
+
+%train_in_batches.m 
+
+% function obj = train_in_batches(obj, X, Y, batch_size, varargin)
+% % obj = train(obj, Xtrain, Ytrain [, option,val, ...])  : train logistic classifier
+% %     Xtrain = [n x d] training data features (constant feature not included)
+% %     Ytrain = [n x 1] training data classes 
+% %     'stepsize', val  => step size for gradient descent [default 1]
+% %     'stopTol',  val  => tolerance for stopping criterion [0.0]
+% %     'stopIter', val  => maximum number of iterations through data before stopping [1000]
+% %     'reg', val       => L2 regularization value [0.0]
+% %     'init', method   => 0: init to all zeros;  1: init to random weights;  
+% % Output:
+% %   obj.wts = [1 x d+1] vector of weights; wts(1) + wts(2)*X(:,1) + wts(3)*X(:,2) + ...
+% 
+% 
+%   [n,d] = size(X);            % d = dimension of data; n = number of training data
+% 
+%   % default options:
+%   plotFlag = true; 
+%   init     = []; 
+%   stopIter = 1000;
+%   stopTol  = -1;
+%   reg      = 0.0;
+%   stepsize = 1;
+% 
+%   i=1;                                       % parse through various options
+%   while (i<=length(varargin)),
+%     switch(lower(varargin{i}))
+%     case 'plot',      plotFlag = varargin{i+1}; i=i+1;   % plots on (true/false)
+%     case 'init',      init     = varargin{i+1}; i=i+1;   % init method
+%     case 'stopiter',  stopIter = varargin{i+1}; i=i+1;   % max # of iterations
+%     case 'stoptol',   stopTol  = varargin{i+1}; i=i+1;   % stopping tolerance on surrogate loss
+%     case 'reg',       reg      = varargin{i+1}; i=i+1;   % L2 regularization
+%     case 'stepsize',  stepsize = varargin{i+1}; i=i+1;   % initial stepsize
+%     end;
+%     i=i+1;
+%   end;
+% 
+%   X1    = [ones(n,1), X];     % make a version of training data with the constant feature
+% 
+%   Yin = Y;                              % save original Y in case needed later
+%   obj.classes = unique(Yin);
+%   if (length(obj.classes) ~= 2) error('This logistic classifier requires a binary classification problem.'); end;
+%   Y(Yin==obj.classes(1)) = 0;
+%   Y(Yin==obj.classes(2)) = 1;           % convert to classic binary labels (0/1)
+% 
+%   if (~isempty(init) || isempty(obj.wts))   % initialize weights and check for correct size
+%     obj.wts = randn(1,d+1);
+%   end;
+%   if (any( size(obj.wts) ~= [1 d+1]) ) error('Weights are not sized correctly for these data'); end;
+%   wtsold = 0*obj.wts+inf;
+% 
+% % Training loop (SGD):
+% iter=1; Jsur=zeros(1,stopIter); J01=zeros(1,stopIter); done=0; 
+% while (~done) 
+%   step = stepsize/iter;               % update step-size and evaluate current loss values
+%   Jsur(iter) = mean(-Y' * log(logistic(obj,X)) - (1-Y)' * log(1 - logistic(obj,X)) + reg * obj.wts * obj.wts');    %%% TODO: compute surrogate (neg log likelihood) loss
+%   fprintf("At iteration i = %i, the error = %.2f\n",iter,Jsur(iter));  
+%   fprintf("------------------------------------------------\n");
+%   J01(iter) = err(obj,X,Yin);
+% 
+%   if (plotFlag), switch d,            % Plots to help with visualization
+%     case 1, fig(2); plot1DLinear(obj,X,Yin);  %  for 1D data we can display the data and the function
+%     case 2, fig(2); plot2DLinear(obj,X,Yin);  %  for 2D data, just the data and decision boundary
+%     otherwise, % no plot for higher dimensions... %  higher dimensions visualization is hard
+%   end; end;
+%   mini_batches = create_mini_batches(obj,X,Y,batch_size);   %Create mini-batches data using create_mini_batches.m function 
+%   number_of_batches = round(n/batch_size);      % Number of batches 
+%   for j=1:number_of_batches,   %Loop through all batches of data 
+%     % Compute linear responses and activation for minibatch j
+%     %%% TODO ^^^
+%     batch_data = mini_batches(:,:,i); 
+%     X_data = batch_data(:,1:2); 
+%     Y_data = batch_data(:,3); 
+%     % Compute gradient:
+%     %%% TODO ^^^ 
+%     [N,D] = size(X_data);
+%     X1_data = [ones(N,1) X_data];
+%     for j=1:N,
+%     % Compute linear responses and activation for data point j
+%     %%% TODO ^^^
+%         y = logistic(obj,X_data(j,:));  
+% 
+%         % Compute gradient:
+%         %%% TODO ^^^
+%         grad = -X1_data(j,:) * (Y_data(j)-y) + 2 * reg * obj.wts;  
+% 
+%         obj.wts = obj.wts - step * grad;      % take a step down the gradient
+%     end;;  
+% 
+%   end;
+% 
+%   done = 0;
+%   %%% TODO: Check for stopping conditions
+%   if((iter >= 2 && abs(Jsur(iter) - Jsur(iter - 1)) < abs(stopTol)) || iter >= stopIter)
+%      done = 1; 
+%      fprintf("Stop training after %i iterations\n",iter); 
+%      fprintf('Training Completed------------------------------\n');
+%      fig(); semilogx(1:iter, Jsur(1:iter),'b-',1:iter,J01(1:iter),'g-'); title("Plot of the convergence of surrogate loss and error rate"); legend('Loss Function','Error Rate (%)'); 
+%   end 
+% 
+%   wtsold = obj.wts;
+%   iter = iter + 1;
+% end;
+
+
+
 %%
 close all
